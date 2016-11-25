@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\caudalimetro\main.asm Sat Nov 19 15:57:20 2016
+AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\caudalimetro\main.asm Fri Nov 25 15:10:28 2016
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\avrasm\inc\m328pdef.inc'
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\avrasm\inc\m328pdef.inc'
@@ -1004,13 +1004,26 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  	.def TOTAL=R21
                                  	.def IMPRIMO=R22
                                  	.def CONTROL=R23
+                                 	.def NUMERADORH=r1
+                                 	.def NumeradorL=R0
+                                 	.def denominadorH=R3
+                                 	.def DenominadorL=R2
+                                 	.def cociente=R4
                                  
                                  	.equ TWI_RATE = 0xF8
                                  	.equ STARTi = 0x08
                                  	.equ MT_SLA_ACK = 0x20
                                  	.equ MT_DATA_ACK= 0x28
                                  	.equ SL_ADD = 0b01001110
-                                 
+                                 	.EQU FERNET = 1
+                                 	.EQU WHISKY = 2
+                                 	.EQU COCA = 3
+                                 	.EQU PERC = 0
+                                 	.EQU PERC1 = $1400
+                                 	.EQU PERC2 = $1401
+                                 	.EQU DRINK1 = $1402
+                                 	.EQU DRINK2 = $1403
+                                 	.equ MaxPulsos = 200 ;;;Maximos pulsos para vaso lleno
                                  	.org 0x0
 000000 940c 0100                 	jmp start
                                  
@@ -1023,14 +1036,12 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  start:
                                  	
                                  	
-000100 940e 0162                 	call InicI2C			; esta funcion inicializa el display, si o si tiene que ir. no hace falta modificarle nada
-000102 940e 0189                 	call InicDisplay		; lo mismo que la anterior
-000104 940e 02bf                 	Call DisplayCocktail	; Mando "Cocktail" al display
-000106 940e 0248                 	call DisplayEnter		; Mando "Enter" al display
-000108 940e 02b6                 	call DisplayWelcome		; Mando "Welcome" al display
+000100 940e 0169                 	call InicI2C			; esta funcion inicializa el display, si o si tiene que ir. no hace falta modificarle nada
+000102 940e 0190                 	call InicDisplay		; lo mismo que la anterior
+000104 940e 02c6                 	Call DisplayCocktail	; Mando "Cocktail" al display
+000106 940e 024f                 	call DisplayEnter		; Mando "Enter" al display
+000108 940e 02bd                 	call DisplayWelcome		; Mando "Welcome" al display
                                  
-                                 	;call displayClear
-                                 	
                                  
 00010a e008                      	ldi TEMP, HIGH(RAMEND)
 00010b bf0e                      	out SPH,TEMP
@@ -1042,71 +1053,27 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
 000110 b90a                      	out ddrd,TEMP
 000111 9a38                      	sbi ddrc,0
                                  	
+                                 	
+                                 	
                                  
                                  start1:	
 000112 94f8                      	cli
-000113 9b4d                      	sbis pind,5
-000114 940c 0116                 	jmp contin
-                                 	;rjmp start1
-                                 contin:
-000116 9a40                      	sbi portc,0
-000117 e000                      	ldi TEMP,0                    ;;;;;;;;;;;;;;;;;;,
-000118 9300 0089                 	sts OCR1AH,TEMP;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-00011a e80c                      	ldi TEMP,140
-00011b 9300 0088                 	sts OCR1AL,TEMP
-                                 
-                                 
-00011d e000                      	ldi TEMP,0x00
-00011e 9300 0080                 	sts TCCR1A,TEMP
-                                 	;ldi TEMP,0b00001001  ; CTC INTERNAL clock
-000120 e00e                      	ldi TEMP,0b00001110  ; CTC External clock
-000121 9300 0081                 	sts TCCR1B,TEMP
-000123 e002                      	ldi TEMP,(1<<1)  ; Interrupts enabled, compare match b
-000124 9300 006f                 	sts TIMSK1, TEMP
-000126 e051                      	ldi TOTAL,0x01
-000127 e070                      	ldi CONTROL,0x00
-000128 9478                      	sei
-                                 loop4:
-                                 	
-000129 fd70                      	sbrc CONTROL, 0
-00012a 940c 0133                 	jmp ahora
-00012c 9150 0084                 	lds TOTAL,TCNT1L
-00012e 940e 014d                 	call imprimototal
-000130 940e 028a                 	call retardo50ms
-000132 cff6                      	rjmp loop4
-                                 ahora:	 	
-000133 94f8                      	cli
-000134 940e 025f                 	call DisplayClear
-000136 940e 0248                 	call DisplayEnter		; Mando "Enter" al display
-000138 940e 02b6                 	call DisplayWelcome		; Mando "Welcome" al display
-                                 loop6:
-00013a 940c 013a                 	jmp loop6
-                                 
-                                 
-                                 
-                                 L1:
-00013c 9150 00f0                 	lds TOTAL,0xf0
-00013e 940e 014d                 	call imprimototal
-000140 b346                      	in r20,TIFR1
-000141 ff41                      	sbrs r20,OCF1A
-000142 cff9                      	RJMP L1
-000143 e042                      	ldi r20,1<<OCF1A
-000144 bb46                      	out tifr1,r20
-                                 
-000145 9150 0084                 	lds TOTAL,TCNT1L
-000147 940e 014d                 	call imprimototal
-                                 	;ldi r17,0x01
-                                 	;lds r16,portc+0x20
-                                 	;eor r16,r17
-                                 	;sts portc+0x20,r16
                                  	
                                  
-000149 cfc8                      	rjmp start1
+000113 940e 011e                 	call CreoTrago	;Perc1 en decimal, 
                                  
+000115 940e 0266                 	call DisplayClear
+000117 940e 024f                 	call DisplayEnter		; Mando "Enter" al display
+000119 940e 02bd                 	call DisplayWelcome		; Mando "Welcome" al display
                                  
-00014a 940e 0276                 	call I2CStop			; cuando finaliza el programa hay que ponerle stop al i2c
+00011b 940e 027d                 	call I2CStop			; cuando finaliza el programa hay que ponerle stop al i2c
                                  loop:
-00014c cfff                      	rjmp loop
+00011d cfff                      	rjmp loop
+                                 
+                                 
+                                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;FIN MAIN;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                 
+                                 
                                  
                                  ;----------------------------SUBRUTINAS-------------------------------
                                  
@@ -1114,10 +1081,54 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  ;				 Caudalimetro
                                  ;__________________________________________________
                                  
+                                 ;---Inicio Creacion de Trago------
+                                 CreoTrago:
+00011e 940e 012c                 	call CargoTrago1
+000120 e070                      	ldi CONTROL,0x00
+                                 loop4:
+                                 	
+000121 fd70                      	sbrc CONTROL, 0
+000122 940c 012b                 	jmp ahora
+000124 9150 0084                 	lds TOTAL,TCNT1L
+000126 940e 014d                 	call imprimototal
+000128 940e 0291                 	call retardo50ms
+00012a cff6                      	rjmp loop4
+                                 ahora:		
+00012b 9508                      	ret
+                                 
+                                 CargoTrago1:
+00012c 94f8                      	cli
+                                 	
+00012d 9100 1400                 	lds temp,PERC1
+00012f ec18                      	ldi temp2,MaxPulsos
+000130 9f01                      	mul temp,temp2
+000131 e000                      	ldi temp,0
+000132 2e30                      	mov denominadorh,temp
+000133 e604                      	ldi temp,100
+000134 2e20                      	mov denominadorL,temp
+000135 940e 0162                 	call division ;En cociente tenemos la cantidad de pulsos 
+                                 
+000137 e000                      	ldi TEMP,0     
+000138 9300 0089                 	sts OCR1AH,TEMP
+00013a 2d04                      	mov TEMP,cociente			;Cantidad de pulsos hasta cortar electrovalvula
+00013b 9300 0088                 	sts OCR1AL,TEMP
+                                 
+00013d e000                      	ldi TEMP,0x00			;Configuro timer para external clock, pt11
+00013e 9300 0080                 	sts TCCR1A,TEMP
+000140 e00e                      	ldi TEMP,0b00001110		; CTC External clock  SART         0b00001001  ; CTC INTERNAL clock
+000141 9300 0081                 	sts TCCR1B,TEMP
+000143 e002                      	ldi TEMP,(1<<1)			 ; Interrupts enabled, compare match b
+000144 9300 006f                 	sts TIMSK1, TEMP
+000146 9100 1402                 	lds temp, Drink1
+000148 b118                      	in temp2,portc
+000149 2b01                      	or temp,temp2
+00014a b908                      	out portc,temp
+00014b 9478                      	sei
+00014c 9508                      	ret
                                  
                                  ;-----numero a string-----
                                  ImprimoTotal:
-00014d 940e 025f                 		call DisplayClear
+00014d 940e 0266                 		call DisplayClear
                                  
 00014f e068                      		ldi IMPRIMO,8
                                  contimprtot:
@@ -1127,14 +1138,14 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  
                                  CeroTotal: 
 000153 e330                      		ldi DISPVAR,'0'
-000154 940e 022a                 		call DisplayChar
+000154 940e 0231                 		call DisplayChar
 000156 956a                      		dec IMPRIMO
 000157 f049                      		breq finImprimo
 000158 0f55                      		lsL TOTAL
 000159 cff6                      		rjmp contimprtot
                                  UnoTotal:
 00015a e331                      		ldi DISPVAR,'1'
-00015b 940e 022a                 		call DisplayChar
+00015b 940e 0231                 		call DisplayChar
 00015d 956a                      		dec IMPRIMO
 00015e f011                      		breq finImprimo
 00015f 0f55                      		lsL TOTAL
@@ -1142,6 +1153,20 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  FinImprimo:
 000161 9508                      ret
                                  
+                                 ;----------------Operaciones matemáticas---------------
+                                 
+                                 ;---Division--
+                                 division:
+000162 2444                      	clr cociente
+                                 
+                                 div1:
+000163 9443                      	inc cociente
+000164 1802                      	sub numeradorL, denominadorL
+000165 0813                      	sbc numeradorH, denominadorH
+000166 f7e0                      	brcc div1
+000167 944a                      	dec cociente
+                                 	
+000168 9508                      	ret
                                  
                                  ;_____________________________________________________
                                  ;;;;;;;;;;;;;;;;;DISPLAY;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;|
@@ -1150,179 +1175,179 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  ;------- inicializacion i2c-------
                                  InicI2C:	
                                  	
-000162 ef08                      	ldi TEMP, TWI_RATE
-000163 9300 00b8                 	sts TWBR,TEMP
+000169 ef08                      	ldi TEMP, TWI_RATE
+00016a 9300 00b8                 	sts TWBR,TEMP
                                  
-000165 ea04                      	ldi TEMP, (1<<TWINT)|(1<<TWSTA)|(1<<TWEN)   
-000166 9300 00bc                 	sts TWCR, TEMP								;envia condicion de start
+00016c ea04                      	ldi TEMP, (1<<TWINT)|(1<<TWSTA)|(1<<TWEN)   
+00016d 9300 00bc                 	sts TWCR, TEMP								;envia condicion de start
                                  
                                  wait1:
-000168 9100 00bc                 	lds TEMP,TWCR
-00016a ff07                      	sbrs TEMP,TWINT								;espera flag de start ok
-00016b cffc                      	rjmp wait1
+00016f 9100 00bc                 	lds TEMP,TWCR
+000171 ff07                      	sbrs TEMP,TWINT								;espera flag de start ok
+000172 cffc                      	rjmp wait1
                                  
-00016c 9100 00b9                 	lds TEMP,TWSR
-00016e 7f08                      	andi TEMP, 0xF8								;si el estado en el registro TWI es distinto de START se va a error
-00016f 3008                      	cpi TEMP, STARTi
-000170 f411                      	brne error_A
-000171 940c 0175                 	jmp continuo
+000173 9100 00b9                 	lds TEMP,TWSR
+000175 7f08                      	andi TEMP, 0xF8								;si el estado en el registro TWI es distinto de START se va a error
+000176 3008                      	cpi TEMP, STARTi
+000177 f411                      	brne error_A
+000178 940c 017c                 	jmp continuo
                                  error_A:
-000173 940e 02b2                 	call ERROR1
+00017a 940e 02b9                 	call ERROR1
                                  	
                                  continuo:
-000175 e40e                      	ldi TEMP, SL_ADD								
-000176 9300 00bb                 	sts TWDR, TEMP								;Carga direccion del esclavo en el registro TWDR, limpia bit TWINT para empezar la transmision de la direccion
-000178 e804                      	ldi TEMP, (1<<TWINT) | (1<<TWEN)
-000179 9300 00bc                 	sts TWCR, TEMP								;envio direccion del esclavo
+00017c e40e                      	ldi TEMP, SL_ADD								
+00017d 9300 00bb                 	sts TWDR, TEMP								;Carga direccion del esclavo en el registro TWDR, limpia bit TWINT para empezar la transmision de la direccion
+00017f e804                      	ldi TEMP, (1<<TWINT) | (1<<TWEN)
+000180 9300 00bc                 	sts TWCR, TEMP								;envio direccion del esclavo
                                  
                                  wait2:
-00017b 9100 00bc                 	lds TEMP,TWCR
-00017d ff07                      	sbrs TEMP,TWINT								;espera seteo de TWINT para confirmar transmision ok
-00017e cffc                      	rjmp wait2
+000182 9100 00bc                 	lds TEMP,TWCR
+000184 ff07                      	sbrs TEMP,TWINT								;espera seteo de TWINT para confirmar transmision ok
+000185 cffc                      	rjmp wait2
                                  
-00017f 9100 00b9                 	lds TEMP,TWSR
-000181 7f08                      	andi TEMP, 0xF8								;chequea el registro TWI, salta a error si no se transmitio bien
-000182 3200                      	cpi TEMP, MT_SLA_ACK
-000183 f011                      	breq error_B
-000184 940c 0188                 	jmp continuo2
+000186 9100 00b9                 	lds TEMP,TWSR
+000188 7f08                      	andi TEMP, 0xF8								;chequea el registro TWI, salta a error si no se transmitio bien
+000189 3200                      	cpi TEMP, MT_SLA_ACK
+00018a f011                      	breq error_B
+00018b 940c 018f                 	jmp continuo2
                                  error_B:
-000186 940e 02b2                 	call ERROR1
+00018d 940e 02b9                 	call ERROR1
                                  continuo2:
-000188 9508                      	ret
+00018f 9508                      	ret
                                  	
                                  ;----------------------------------Fin inicializacion i2c----------------------------------------;
                                  
                                  ;.................................incialización display, envio de a 4bits........................;
                                  InicDisplay:	
                                  	
-000189 940e 028a                 	call retardo50ms
+000190 940e 0291                 	call retardo50ms
                                  	
-00018b e300                      	ldi TEMP, 0x30
-00018c e310                      	ldi r17,0x30
-00018d 9300 00bb                 	sts TWDR, TEMP								; Carga DATA en twdr, limpia twint para empezar la transmision
-00018f e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
-000190 9300 00bc                 	sts TWCR, TEMP								
-000192 940e 021e                 	call WaitDataI2c
+000192 e300                      	ldi TEMP, 0x30
+000193 e310                      	ldi r17,0x30
+000194 9300 00bb                 	sts TWDR, TEMP								; Carga DATA en twdr, limpia twint para empezar la transmision
+000196 e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
+000197 9300 00bc                 	sts TWCR, TEMP								
+000199 940e 0225                 	call WaitDataI2c
                                  
-000194 940e 029e                 	call DisplayEnable
+00019b 940e 02a5                 	call DisplayEnable
                                  
-000196 940e 0292                 	call retardo5ms
+00019d 940e 0299                 	call retardo5ms
                                  
-000198 940e 029e                 	call DisplayEnable
+00019f 940e 02a5                 	call DisplayEnable
                                  
-00019a 940e 0282                 	call retardo1ms
+0001a1 940e 0289                 	call retardo1ms
                                  												; todo esto te lo pide que hagas la hoja de datos del display
-00019c 940e 029e                 	call DisplayEnable
+0001a3 940e 02a5                 	call DisplayEnable
                                  
-00019e 940e 0292                 	call retardo5ms
+0001a5 940e 0299                 	call retardo5ms
                                  
-0001a0 e208                      	ldi r16, 0x28								;set 4bit mode
-0001a1 e218                      	ldi r17,0x28
-0001a2 9300 00bb                 	sts TWDR, r16								
-0001a4 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-0001a5 9300 00bc                 	sts TWCR, r16								
-0001a7 940e 021e                 	call WaitDataI2c
+0001a7 e208                      	ldi r16, 0x28								;set 4bit mode
+0001a8 e218                      	ldi r17,0x28
+0001a9 9300 00bb                 	sts TWDR, r16								
+0001ab e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+0001ac 9300 00bc                 	sts TWCR, r16								
+0001ae 940e 0225                 	call WaitDataI2c
                                  	
-0001a9 940e 029e                 	call DisplayEnable
+0001b0 940e 02a5                 	call DisplayEnable
                                  
-0001ab 940e 0282                 	call retardo1ms
+0001b2 940e 0289                 	call retardo1ms
                                  
-0001ad e208                      	ldi TEMP,0x28								;0x28_H
-0001ae e218                      	ldi r17,0x28
-0001af 9300 00bb                 	sts TWDR, TEMP								
-0001b1 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-0001b2 9300 00bc                 	sts TWCR, TEMP								
-0001b4 940e 021e                 	call WaitDataI2c
+0001b4 e208                      	ldi TEMP,0x28								;0x28_H
+0001b5 e218                      	ldi r17,0x28
+0001b6 9300 00bb                 	sts TWDR, TEMP								
+0001b8 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+0001b9 9300 00bc                 	sts TWCR, TEMP								
+0001bb 940e 0225                 	call WaitDataI2c
                                  
-0001b6 940e 029e                 	call DisplayEnable
+0001bd 940e 02a5                 	call DisplayEnable
                                  
-0001b8 e808                      	ldi TEMP,0x88								;0x28_L
-0001b9 e818                      	ldi r17,0x88
-0001ba 9300 00bb                 	sts TWDR, r16								
-0001bc e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
-0001bd 9300 00bc                 	sts TWCR, TEMP								
-0001bf 940e 021e                 	call WaitDataI2c
+0001bf e808                      	ldi TEMP,0x88								;0x28_L
+0001c0 e818                      	ldi r17,0x88
+0001c1 9300 00bb                 	sts TWDR, r16								
+0001c3 e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
+0001c4 9300 00bc                 	sts TWCR, TEMP								
+0001c6 940e 0225                 	call WaitDataI2c
                                  
-0001c1 940e 029e                 	call DisplayEnable
+0001c8 940e 02a5                 	call DisplayEnable
                                  
-0001c3 e008                      	ldi TEMP, 0x08								;0x08_H
-0001c4 e018                      	ldi r17,0x08
-0001c5 9300 00bb                 	sts TWDR, TEMP								
-0001c7 e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
-0001c8 9300 00bc                 	sts TWCR, TEMP								
-0001ca 940e 021e                 	call WaitDataI2c
+0001ca e008                      	ldi TEMP, 0x08								;0x08_H
+0001cb e018                      	ldi r17,0x08
+0001cc 9300 00bb                 	sts TWDR, TEMP								
+0001ce e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
+0001cf 9300 00bc                 	sts TWCR, TEMP								
+0001d1 940e 0225                 	call WaitDataI2c
                                  
-0001cc 940e 029e                 	call DisplayEnable							
+0001d3 940e 02a5                 	call DisplayEnable							
                                  
-0001ce e808                      	ldi TEMP,0x88								;0x08_L				
-0001cf e818                      	ldi r17,0x88
+0001d5 e808                      	ldi TEMP,0x88								;0x08_L				
+0001d6 e818                      	ldi r17,0x88
                                  	
-0001d0 9300 00bb                 	sts TWDR, TEMP								
-0001d2 e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
-0001d3 9300 00bc                 	sts TWCR, TEMP								
-0001d5 940e 021e                 	call WaitDataI2c
+0001d7 9300 00bb                 	sts TWDR, TEMP								
+0001d9 e804                      	ldi TEMP, (1<<TWINT) |(1<<TWEN)
+0001da 9300 00bc                 	sts TWCR, TEMP								
+0001dc 940e 0225                 	call WaitDataI2c
                                  
-0001d7 940e 029e                 	call DisplayEnable
+0001de 940e 02a5                 	call DisplayEnable
                                  
-0001d9 e008                      	ldi r16,0x08								;0x01_H	
-0001da e018                      	ldi r17,0x08
-0001db 9300 00bb                 	sts TWDR, r16								
-0001dd e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-0001de 9300 00bc                 	sts TWCR, r16								
-0001e0 940e 021e                 	call WaitDataI2c
+0001e0 e008                      	ldi r16,0x08								;0x01_H	
+0001e1 e018                      	ldi r17,0x08
+0001e2 9300 00bb                 	sts TWDR, r16								
+0001e4 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+0001e5 9300 00bc                 	sts TWCR, r16								
+0001e7 940e 0225                 	call WaitDataI2c
                                  
-0001e2 940e 029e                 	call DisplayEnable
+0001e9 940e 02a5                 	call DisplayEnable
                                  
-0001e4 e108                      	ldi r16,0x18								;0x01_L	
-0001e5 e118                      	ldi r17,0x18
+0001eb e108                      	ldi r16,0x18								;0x01_L	
+0001ec e118                      	ldi r17,0x18
                                  		
-0001e6 9300 00bb                 	sts TWDR, r16								
-0001e8 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-0001e9 9300 00bc                 	sts TWCR, r16								
-0001eb 940e 021e                 	call WaitDataI2c
+0001ed 9300 00bb                 	sts TWDR, r16								
+0001ef e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+0001f0 9300 00bc                 	sts TWCR, r16								
+0001f2 940e 0225                 	call WaitDataI2c
                                  
-0001ed 940e 029e                 	call DisplayEnable
+0001f4 940e 02a5                 	call DisplayEnable
                                  
-0001ef e008                      	ldi r16,0x08								;0x0F_H		
-0001f0 e018                      	ldi r17,0x08
+0001f6 e008                      	ldi r16,0x08								;0x0F_H		
+0001f7 e018                      	ldi r17,0x08
                                  
-0001f1 9300 00bb                 	sts TWDR, r16								
-0001f3 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-0001f4 9300 00bc                 	sts TWCR, r16								
-0001f6 940e 021e                 	call WaitDataI2c
+0001f8 9300 00bb                 	sts TWDR, r16								
+0001fa e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+0001fb 9300 00bc                 	sts TWCR, r16								
+0001fd 940e 0225                 	call WaitDataI2c
                                  
-0001f8 940e 029e                 	call DisplayEnable
+0001ff 940e 02a5                 	call DisplayEnable
                                  	
-0001fa ef08                      	ldi r16,0xF8								;0x0F_L	
-0001fb ef18                      	ldi r17,0xF8
-0001fc 9300 00bb                 	sts TWDR, r16								
-0001fe e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-0001ff 9300 00bc                 	sts TWCR, r16								
-000201 940e 021e                 	call WaitDataI2c
+000201 ef08                      	ldi r16,0xF8								;0x0F_L	
+000202 ef18                      	ldi r17,0xF8
+000203 9300 00bb                 	sts TWDR, r16								
+000205 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+000206 9300 00bc                 	sts TWCR, r16								
+000208 940e 0225                 	call WaitDataI2c
                                  
-000203 940e 029e                 	call DisplayEnable
+00020a 940e 02a5                 	call DisplayEnable
                                  
-000205 e008                      	ldi r16,0x08							;0x06_H
-000206 e018                      	ldi r17,0x08
-000207 9300 00bb                 	sts TWDR, r16								
-000209 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
-00020a 9300 00bc                 	sts TWCR, r16
-00020c 940e 021e                 	call WaitDataI2c
+00020c e008                      	ldi r16,0x08							;0x06_H
+00020d e018                      	ldi r17,0x08
+00020e 9300 00bb                 	sts TWDR, r16								
+000210 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
+000211 9300 00bc                 	sts TWCR, r16
+000213 940e 0225                 	call WaitDataI2c
                                  
-00020e 940e 029e                 	call DisplayEnable
+000215 940e 02a5                 	call DisplayEnable
                                  
-000210 940e 0292                 	call retardo5ms
+000217 940e 0299                 	call retardo5ms
                                  	
-000212 e608                      	ldi r16, 0x68							;0x06_L
-000213 e618                      	ldi r17, 0x68
-000214 9300 00bb                 	sts TWDR, r16								
-000216 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
-000217 9300 00bc                 	sts TWCR, r16
-000219 940e 021e                 	call WaitDataI2c
+000219 e608                      	ldi r16, 0x68							;0x06_L
+00021a e618                      	ldi r17, 0x68
+00021b 9300 00bb                 	sts TWDR, r16								
+00021d e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
+00021e 9300 00bc                 	sts TWCR, r16
+000220 940e 0225                 	call WaitDataI2c
                                  
-00021b 940e 029e                 	call DisplayEnable
+000222 940e 02a5                 	call DisplayEnable
                                  
-00021d 9508                      	ret
+000224 9508                      	ret
                                  
                                  ;-----------Fin Inicialización display--------------
                                  
@@ -1331,171 +1356,171 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  WaitDataI2c:
                                  
                                  wait_twint:
-00021e 9100 00bc                 	lds r16,TWCR
-000220 ff07                      	sbrs r16,TWINT								; Espera TWINT para confirmar que se envió ok
-000221 cffc                      	rjmp wait_twint
+000225 9100 00bc                 	lds r16,TWCR
+000227 ff07                      	sbrs r16,TWINT								; Espera TWINT para confirmar que se envió ok
+000228 cffc                      	rjmp wait_twint
                                  
-000222 9100 00b9                 	lds r16,TWSR
-000224 7f08                      	andi r16, 0xF8
-000225 3208                      	cpi r16, MT_DATA_ACK
-000226 f409                      	brne error_data1
-000227 9508                      	ret
+000229 9100 00b9                 	lds r16,TWSR
+00022b 7f08                      	andi r16, 0xF8
+00022c 3208                      	cpi r16, MT_DATA_ACK
+00022d f409                      	brne error_data1
+00022e 9508                      	ret
                                  error_data1:
-000228 940c 027a                 	jmp error_data
+00022f 940c 0281                 	jmp error_data
                                  ;------DISPLAY : CHAR------;                  Con esta Funcion le enviamos un CHAR al display
                                  DisplayChar:
                                  
-00022a 2f03                      	mov r16,DISPVAR							  ;En DISPVAR tiene que estar el CHAR
-00022b 7f00                      	andi r16,0xF0							  ;Envio DISPVAR_H
-00022c 6009                      	ori r16,0x09
-00022d 2f10                      	mov r17,r16
-00022e 9300 00bb                 	sts TWDR, r16								; Carga DATA en twdr, limpia twint para empezar la transmision
-000230 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-000231 9300 00bc                 	sts TWCR, r16
+000231 2f03                      	mov r16,DISPVAR							  ;En DISPVAR tiene que estar el CHAR
+000232 7f00                      	andi r16,0xF0							  ;Envio DISPVAR_H
+000233 6009                      	ori r16,0x09
+000234 2f10                      	mov r17,r16
+000235 9300 00bb                 	sts TWDR, r16								; Carga DATA en twdr, limpia twint para empezar la transmision
+000237 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+000238 9300 00bc                 	sts TWCR, r16
                                  
-000233 940e 021e                 	call WaitDataI2c
-000235 940e 029e                 	call DisplayEnable
+00023a 940e 0225                 	call WaitDataI2c
+00023c 940e 02a5                 	call DisplayEnable
                                  
-000237 2f03                      	mov r16,DISPVAR							  ;Envio DISPVAR_L
-000238 0f00                      	lsl r16
-000239 0f00                      	lsl r16
-00023a 0f00                      	lsl r16
-00023b 0f00                      	lsl r16
-00023c 6009                      	ori r16,0x09
-00023d 2f10                      	mov r17,r16
-00023e 9300 00bb                 	sts TWDR, r16								
-000240 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
-000241 9300 00bc                 	sts TWCR, r16
-000243 940e 021e                 	call WaitDataI2c
+00023e 2f03                      	mov r16,DISPVAR							  ;Envio DISPVAR_L
+00023f 0f00                      	lsl r16
+000240 0f00                      	lsl r16
+000241 0f00                      	lsl r16
+000242 0f00                      	lsl r16
+000243 6009                      	ori r16,0x09
+000244 2f10                      	mov r17,r16
+000245 9300 00bb                 	sts TWDR, r16								
+000247 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
+000248 9300 00bc                 	sts TWCR, r16
+00024a 940e 0225                 	call WaitDataI2c
                                  
-000245 940e 029e                 	call DisplayEnable
+00024c 940e 02a5                 	call DisplayEnable
                                  
-000247 9508                      	ret
+00024e 9508                      	ret
                                  
                                  ;------Display :ENTER----------
                                  
                                  DisplayEnter:
                                  
-000248 ec08                      	ldi r16,0xC8								;0x08_H
-000249 ec18                      	ldi r17,0xC8
-00024a 9300 00bb                 	sts TWDR, r16								
-00024c e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-00024d 9300 00bc                 	sts TWCR, r16								
-00024f 940e 021e                 	call WaitDataI2c
+00024f ec08                      	ldi r16,0xC8								;0x08_H
+000250 ec18                      	ldi r17,0xC8
+000251 9300 00bb                 	sts TWDR, r16								
+000253 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+000254 9300 00bc                 	sts TWCR, r16								
+000256 940e 0225                 	call WaitDataI2c
                                  
-000251 940e 029e                 	call DisplayEnable							
+000258 940e 02a5                 	call DisplayEnable							
                                  
-000253 e008                      	ldi r16,0x08								;0x08_L				
-000254 e018                      	ldi r17,0x08
+00025a e008                      	ldi r16,0x08								;0x08_L				
+00025b e018                      	ldi r17,0x08
                                  	
-000255 9300 00bb                 	sts TWDR, r16								
-000257 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-000258 9300 00bc                 	sts TWCR, r16								
-00025a 940e 021e                 	call WaitDataI2c
+00025c 9300 00bb                 	sts TWDR, r16								
+00025e e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+00025f 9300 00bc                 	sts TWCR, r16								
+000261 940e 0225                 	call WaitDataI2c
                                  
-00025c 940e 029e                 	call DisplayEnable
-00025e 9508                      ret
+000263 940e 02a5                 	call DisplayEnable
+000265 9508                      ret
                                  
                                  ;----Display :Clear------
                                  DisplayClear:
                                  	
-00025f e008                      	ldi r16,0x08								;0x01_H	
-000260 e018                      	ldi r17,0x08
-000261 9300 00bb                 	sts TWDR, r16								
-000263 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-000264 9300 00bc                 	sts TWCR, r16								
-000266 940e 021e                 	call WaitDataI2c
+000266 e008                      	ldi r16,0x08								;0x01_H	
+000267 e018                      	ldi r17,0x08
+000268 9300 00bb                 	sts TWDR, r16								
+00026a e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+00026b 9300 00bc                 	sts TWCR, r16								
+00026d 940e 0225                 	call WaitDataI2c
                                  
-000268 940e 029e                 	call DisplayEnable
+00026f 940e 02a5                 	call DisplayEnable
                                  
-00026a e108                      	ldi r16,0x18								;0x01_L	
-00026b e118                      	ldi r17,0x18
+000271 e108                      	ldi r16,0x18								;0x01_L	
+000272 e118                      	ldi r17,0x18
                                  		
-00026c 9300 00bb                 	sts TWDR, r16								
-00026e e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
-00026f 9300 00bc                 	sts TWCR, r16								
-000271 940e 021e                 	call WaitDataI2c
+000273 9300 00bb                 	sts TWDR, r16								
+000275 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)
+000276 9300 00bc                 	sts TWCR, r16								
+000278 940e 0225                 	call WaitDataI2c
                                  
-000273 940e 029e                 	call DisplayEnable
-000275 9508                      ret
+00027a 940e 02a5                 	call DisplayEnable
+00027c 9508                      ret
                                  ;----DISPLAY : STOP------
                                  
                                  I2CStop:
-000276 e904                      	ldi r16, (1<<TWINT)|(1<<TWEN)| (1<<TWSTO)	;Transmite bit de STOP
-000277 9300 00bc                 	sts TWCR, r16
-000279 9508                      			ret
+00027d e904                      	ldi r16, (1<<TWINT)|(1<<TWEN)| (1<<TWSTO)	;Transmite bit de STOP
+00027e 9300 00bc                 	sts TWCR, r16
+000280 9508                      			ret
                                  
                                  error_data:
-00027a 940e 02b2                 	call ERROR1
+000281 940e 02b9                 	call ERROR1
                                  
                                  
                                  
                                  
                                  retardo10us:
-00027c 932f                      	push RETARDO
-00027d e32a                      	ldi RETARDO,58
+000283 932f                      	push RETARDO
+000284 e32a                      	ldi RETARDO,58
                                  loop_ret_10:
-00027e 952a                      	dec RETARDO
-00027f f7f1                      	brne loop_ret_10
-000280 912f                      	pop RETARDO
-000281 9508                      	ret
+000285 952a                      	dec RETARDO
+000286 f7f1                      	brne loop_ret_10
+000287 912f                      	pop RETARDO
+000288 9508                      	ret
                                  
                                  retardo1ms:
-000282 932f                      	push RETARDO
-000283 e624                      	ldi RETARDO,100
+000289 932f                      	push RETARDO
+00028a e624                      	ldi RETARDO,100
                                  loop_ret_1m:
-000284 940e 027c                 	call retardo10us
-000286 952a                      	dec RETARDO
+00028b 940e 0283                 	call retardo10us
+00028d 952a                      	dec RETARDO
                                  	
-000287 f7e1                      	brne loop_ret_1m
-000288 912f                      	pop RETARDO
-000289 9508                      	ret
+00028e f7e1                      	brne loop_ret_1m
+00028f 912f                      	pop RETARDO
+000290 9508                      	ret
                                  
                                  retardo50ms:
-00028a 932f                      	push RETARDO
-00028b e322                      	ldi RETARDO,50
+000291 932f                      	push RETARDO
+000292 e322                      	ldi RETARDO,50
                                  loop_ret_50m:
-00028c 940e 0282                 	call retardo1ms
-00028e 952a                      	dec RETARDO
-00028f f7e1                      	brne loop_ret_50m
-000290 912f                      	pop RETARDO
-000291 9508                      	ret
+000293 940e 0289                 	call retardo1ms
+000295 952a                      	dec RETARDO
+000296 f7e1                      	brne loop_ret_50m
+000297 912f                      	pop RETARDO
+000298 9508                      	ret
                                  
                                  retardo5ms:
-000292 e025                      	ldi RETARDO,5
+000299 e025                      	ldi RETARDO,5
                                  loop_ret_5m:
-000293 940e 0282                 	call retardo1ms
-000295 952a                      	dec RETARDO
-000296 f7e1                      	brne loop_ret_5m
-000297 9508                      	ret
+00029a 940e 0289                 	call retardo1ms
+00029c 952a                      	dec RETARDO
+00029d f7e1                      	brne loop_ret_5m
+00029e 9508                      	ret
                                  
                                  retardo3s:
                                  
-000298 e32c                      	ldi RETARDO, 60
+00029f e32c                      	ldi RETARDO, 60
                                  loop_ret_3s:
-000299 940e 028a                 	call retardo50ms
-00029b 952a                      	dec RETARDO
-00029c f7e1                      	brne loop_ret_3s
-00029d 9508                      	ret
+0002a0 940e 0291                 	call retardo50ms
+0002a2 952a                      	dec RETARDO
+0002a3 f7e1                      	brne loop_ret_3s
+0002a4 9508                      	ret
                                  
                                  DisplayEnable:
-00029e 940e 0282                 	call retardo1ms
+0002a5 940e 0289                 	call retardo1ms
                                  	
-0002a0 6014                      	ori r17, 0x04
-0002a1 9310 00bb                 	sts TWDR, r17								
-0002a3 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
-0002a4 9300 00bc                 	sts TWCR, r16
-0002a6 940e 021e                 	call WaitDataI2c
+0002a7 6014                      	ori r17, 0x04
+0002a8 9310 00bb                 	sts TWDR, r17								
+0002aa e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
+0002ab 9300 00bc                 	sts TWCR, r16
+0002ad 940e 0225                 	call WaitDataI2c
                                  ;	call retardo1ms
                                  
-0002a8 7f1b                      	andi r17, 0b11111011
-0002a9 9310 00bb                 	sts TWDR, r17								
-0002ab e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
-0002ac 9300 00bc                 	sts TWCR, r16
-0002ae 940e 021e                 	call WaitDataI2c
+0002af 7f1b                      	andi r17, 0b11111011
+0002b0 9310 00bb                 	sts TWDR, r17								
+0002b2 e804                      	ldi r16, (1<<TWINT) |(1<<TWEN)				
+0002b3 9300 00bc                 	sts TWCR, r16
+0002b5 940e 0225                 	call WaitDataI2c
                                  
                                  	;call retardo1ms
-0002b0 9508                      	ret
+0002b7 9508                      	ret
                                  
                                  
                                  ;-----------Error----------------------------------
@@ -1504,73 +1529,76 @@ AVRASM ver. 2.2.6  C:\Users\waral\OneDrive\Documentos\GitHub\Labo\caudalimetro\c
                                  	
                                  	;ldi R16,0x02
                                  	;out PORTB,R16
-0002b1 cfff                      	rjmp error
+0002b8 cfff                      	rjmp error
                                  
                                  ERROR1:
                                  	
                                  	;ldi R16,0x02
                                  	;out PORTB,R16
-0002b2 e904                      	ldi r16, (1<<TWINT)|(1<<TWEN)| (1<<TWSTO)	;Transmite bit de STOP
-0002b3 9300 00bc                 	sts TWCR, r16
-0002b5 cffb                      	rjmp error
+0002b9 e904                      	ldi r16, (1<<TWINT)|(1<<TWEN)| (1<<TWSTO)	;Transmite bit de STOP
+0002ba 9300 00bc                 	sts TWCR, r16
+0002bc cffb                      	rjmp error
                                  
                                  ;....................Display welcome............................
                                  DisplayWelcome:
                                  	
-0002b6 e0f5                      	LDi ZH, High(2*T_Welcome)
-0002b7 e9e0                      	LDI ZL, LOW(2*T_Welcome)
-0002b8 e04d                      	ldi CONTADOR,13
+0002bd e0f5                      	LDi ZH, High(2*T_Welcome)
+0002be e9ee                      	LDI ZL, LOW(2*T_Welcome)
+0002bf e04d                      	ldi CONTADOR,13
                                  	
                                  DisplayWelcome_cont:
-0002b9 9135                      	lpm DISPVAR, Z+
-0002ba 940e 022a                 	call DisplayChar
+0002c0 9135                      	lpm DISPVAR, Z+
+0002c1 940e 0231                 	call DisplayChar
                                  
-0002bc 954a                      	dec  CONTADOR
-0002bd f7d9                      	brne DisplayWelcome_cont
+0002c3 954a                      	dec  CONTADOR
+0002c4 f7d9                      	brne DisplayWelcome_cont
                                  	
-0002be 9508                      	ret
+0002c5 9508                      	ret
                                  
                                  DisplayCocktail:
                                  	
-0002bf e0f5                      	LDI ZH, High(2*T_Cocktail)
-0002c0 e9ee                      	LDI ZL, LOW(2*T_Cocktail)
-0002c1 e04f                      	ldi CONTADOR,15
+0002c6 e0f5                      	LDI ZH, High(2*T_Cocktail)
+0002c7 eaec                      	LDI ZL, LOW(2*T_Cocktail)
+0002c8 e04f                      	ldi CONTADOR,15
                                  	
                                  DisplayCocktail_cont:
-0002c2 9135                      	lpm DISPVAR, Z+
-0002c3 940e 022a                 	call DisplayChar
+0002c9 9135                      	lpm DISPVAR, Z+
+0002ca 940e 0231                 	call DisplayChar
                                  
-0002c5 954a                      	dec  CONTADOR
-0002c6 f7d9                      	brne DisplayCocktail_cont
+0002cc 954a                      	dec  CONTADOR
+0002cd f7d9                      	brne DisplayCocktail_cont
                                  	
-0002c7 9508                      	ret
+0002ce 9508                      	ret
                                  
                                  ;....................TABLAS (display)...........................
                                  
                                  T_Welcome:
-0002c8 4942
-0002c9 4e45
-0002ca 4556
-0002cb 494e
-0002cc 4f44
-0002cd 2153
-0002ce 3021                      	.Db 'B','I','E','N','V','E','N','I','D','O','S','!','!','0'
+0002cf 4942
+0002d0 4e45
+0002d1 4556
+0002d2 494e
+0002d3 4f44
+0002d4 2153
+0002d5 3021                      	.Db 'B','I','E','N','V','E','N','I','D','O','S','!','!','0'
                                  
                                  T_COCKTail:
-0002cf 2a2a
-0002d0 432a
-0002d1 434f
-0002d2 2d4b
-0002d3 4154
-0002d4 4c49
-0002d5 2a2a
-0002d6 302a                      	.DB '*','*','*','C','O','C','K','-','T','A','I','L','*','*','*','0'
+0002d6 2a2a
+0002d7 432a
+0002d8 434f
+0002d9 2d4b
+0002da 4154
+0002db 4c49
+0002dc 2a2a
+0002dd 302a                      	.DB '*','*','*','C','O','C','K','-','T','A','I','L','*','*','*','0'
                                  	
                                  	.org 0x300
                                  T1_B_ISR:
-000300 94f8                      	cli
-000301 e071                      	ldi CONTROL, 0x01
-000302 9840                      	cbi portc,0
+000300 e071                      	ldi CONTROL, 0x01
+000301 9840                      	cbi portc,0
+000302 9841                      	cbi portc,1
+000303 9842                      	cbi portc,2
+000304 e000                      	ldi TEMP,0b00000000	; STOP TIMER         0b00001001  ; CTC INTERNAL clock
+000305 9300 0081                 	sts TCCR1B,TEMP
 
 
 RESOURCE USE INFORMATION
@@ -1588,39 +1616,39 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 "ATmega328P" register use summary:
-x  :   0 y  :   0 z  :   2 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
+x  :   0 y  :   0 z  :   2 r0 :   1 r1 :   1 r2 :   2 r3 :   2 r4 :   4 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16: 128 r17:  22 r18:  16 r19:   6 r20:   9 
-r21:   7 r22:   3 r23:   3 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
+r13:   0 r14:   0 r15:   0 r16: 139 r17:  26 r18:  16 r19:   6 r20:   5 
+r21:   4 r22:   3 r23:   3 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
 r29:   0 r30:   2 r31:   2 
-Registers used: 11 out of 35 (31.4%)
+Registers used: 16 out of 35 (45.7%)
 
 "ATmega328P" instruction use summary:
 .lds  :   0 .sts  :   0 adc   :   0 add   :   0 adiw  :   0 and   :   0 
 andi  :   5 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
-brcc  :   0 brcs  :   0 break :   0 breq  :   3 brge  :   0 brhc  :   0 
+brcc  :   1 brcs  :   0 break :   0 breq  :   3 brge  :   0 brhc  :   0 
 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 brlt  :   0 brmi  :   0 
 brne  :   9 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
-brvs  :   0 bset  :   0 bst   :   0 call  :  72 cbi   :   1 cbr   :   0 
-clc   :   0 clh   :   0 cli   :   3 cln   :   0 clr   :   0 cls   :   0 
+brvs  :   0 bset  :   0 bst   :   0 call  :  73 cbi   :   3 cbr   :   0 
+clc   :   0 clh   :   0 cli   :   2 cln   :   0 clr   :   1 cls   :   0 
 clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 
-cpi   :   3 cpse  :   0 dec   :   9 eor   :   0 fmul  :   0 fmuls :   0 
-fmulsu:   0 icall :   0 ijmp  :   0 in    :   1 inc   :   0 jmp   :   8 
-ld    :   0 ldd   :   0 ldi   :  84 lds   :   9 lpm   :   2 lsl   :   6 
-lsr   :   0 mov   :   4 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 
-neg   :   0 nop   :   0 or    :   0 ori   :   3 out   :   5 pop   :   3 
-push  :   3 rcall :   0 ret   :  16 reti  :   1 rjmp  :  13 rol   :   0 
-ror   :   0 sbc   :   0 sbci  :   0 sbi   :   2 sbic  :   0 sbis  :   1 
-sbiw  :   0 sbr   :   0 sbrc  :   1 sbrs  :   5 sec   :   0 seh   :   0 
+cpi   :   3 cpse  :   0 dec   :  10 eor   :   0 fmul  :   0 fmuls :   0 
+fmulsu:   0 icall :   0 ijmp  :   0 in    :   1 inc   :   1 jmp   :   6 
+ld    :   0 ldd   :   0 ldi   :  85 lds   :   9 lpm   :   2 lsl   :   6 
+lsr   :   0 mov   :   7 movw  :   0 mul   :   1 muls  :   0 mulsu :   0 
+neg   :   0 nop   :   0 or    :   1 ori   :   3 out   :   5 pop   :   3 
+push  :   3 rcall :   0 ret   :  19 reti  :   1 rjmp  :  11 rol   :   0 
+ror   :   0 sbc   :   1 sbci  :   0 sbi   :   1 sbic  :   0 sbis  :   0 
+sbiw  :   0 sbr   :   0 sbrc  :   1 sbrs  :   4 sec   :   0 seh   :   0 
 sei   :   1 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 
-sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  51 
-sub   :   0 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
-Instructions used: 28 out of 113 (24.8%)
+sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  52 
+sub   :   1 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
+Instructions used: 34 out of 113 (30.1%)
 
 "ATmega328P" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000608    928     30    958   32768   2.9%
+[.cseg] 0x000000 0x000610    950     30    980   32768   3.0%
 [.dseg] 0x000100 0x000100      0      0      0    2048   0.0%
 [.eseg] 0x000000 0x000000      0      0      0    1024   0.0%
 

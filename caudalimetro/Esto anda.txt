@@ -18,26 +18,13 @@
 	.def TOTAL=R21
 	.def IMPRIMO=R22
 	.def CONTROL=R23
-	.def NUMERADORH=r1
-	.def NumeradorL=R0
-	.def denominadorH=R3
-	.def DenominadorL=R2
-	.def cociente=R4
 
 	.equ TWI_RATE = 0xF8
 	.equ STARTi = 0x08
 	.equ MT_SLA_ACK = 0x20
 	.equ MT_DATA_ACK= 0x28
 	.equ SL_ADD = 0b01001110
-	.EQU FERNET = 1
-	.EQU WHISKY = 2
-	.EQU COCA = 3
-	.EQU PERC = 0
-	.EQU PERC1 = $1400
-	.EQU PERC2 = $1401
-	.EQU DRINK1 = $1402
-	.EQU DRINK2 = $1403
-	.equ MaxPulsos = 200 ;;;Maximos pulsos para vaso lleno
+
 	.org 0x0
 	jmp start
 
@@ -56,6 +43,8 @@ start:
 	call DisplayEnter		; Mando "Enter" al display
 	call DisplayWelcome		; Mando "Welcome" al display
 
+	;call displayClear
+	
 
 	ldi TEMP, HIGH(RAMEND)
 	out SPH,TEMP
@@ -67,38 +56,30 @@ start:
 	out ddrd,TEMP
 	sbi ddrc,0
 	
-	
-	
 
 start1:	
 	cli
-	
-
-	call CreoTrago	;Perc1 en decimal, 
-
-	call DisplayClear
-	call DisplayEnter		; Mando "Enter" al display
-	call DisplayWelcome		; Mando "Welcome" al display
-
-	call I2CStop			; cuando finaliza el programa hay que ponerle stop al i2c
-loop:
-	rjmp loop
+	sbis pind,5
+	jmp contin
+	;rjmp start1
+contin:
+	sbi portc,0
+	ldi TEMP,0                    ;;;;;;;;;;;;;;;;;;,
+	sts OCR1AH,TEMP;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	ldi TEMP,140
+	sts OCR1AL,TEMP
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;FIN MAIN;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;----------------------------SUBRUTINAS-------------------------------
-
-;________________________________________________--
-;				 Caudalimetro
-;__________________________________________________
-
-;---Inicio Creacion de Trago------
-CreoTrago:
-	call CargoTrago1
+	ldi TEMP,0x00
+	sts TCCR1A,TEMP
+	;ldi TEMP,0b00001001  ; CTC INTERNAL clock
+	ldi TEMP,0b00001110  ; CTC External clock
+	sts TCCR1B,TEMP
+	ldi TEMP,(1<<1)  ; Interrupts enabled, compare match b
+	sts TIMSK1, TEMP
+	ldi TOTAL,0x01
 	ldi CONTROL,0x00
+	sei
 loop4:
 	
 	sbrc CONTROL, 0
@@ -107,38 +88,46 @@ loop4:
 	call imprimototal
 	call retardo50ms
 	rjmp loop4
-ahora:		
-	ret
-
-CargoTrago1:
+ahora:	 	
 	cli
+	call DisplayClear
+	call DisplayEnter		; Mando "Enter" al display
+	call DisplayWelcome		; Mando "Welcome" al display
+loop6:
+	jmp loop6
+
+
+
+L1:
+	lds TOTAL,0xf0
+	call imprimototal
+	in r20,TIFR1
+	sbrs r20,OCF1A
+	RJMP L1
+	ldi r20,1<<OCF1A
+	out tifr1,r20
+
+	lds TOTAL,TCNT1L
+	call imprimototal
+	;ldi r17,0x01
+	;lds r16,portc+0x20
+	;eor r16,r17
+	;sts portc+0x20,r16
 	
-	lds temp,PERC1
-	ldi temp2,MaxPulsos
-	mul temp,temp2
-	ldi temp,0
-	mov denominadorh,temp
-	ldi temp,100
-	mov denominadorL,temp
-	call division ;En cociente tenemos la cantidad de pulsos 
 
-	ldi TEMP,0     
-	sts OCR1AH,TEMP
-	mov TEMP,cociente			;Cantidad de pulsos hasta cortar electrovalvula
-	sts OCR1AL,TEMP
+	rjmp start1
 
-	ldi TEMP,0x00			;Configuro timer para external clock, pt11
-	sts TCCR1A,TEMP
-	ldi TEMP,0b00001110		; CTC External clock  SART         0b00001001  ; CTC INTERNAL clock
-	sts TCCR1B,TEMP
-	ldi TEMP,(1<<1)			 ; Interrupts enabled, compare match b
-	sts TIMSK1, TEMP
-	lds temp, Drink1
-	in temp2,portc
-	or temp,temp2
-	out portc,temp
-	sei
-	ret
+
+	call I2CStop			; cuando finaliza el programa hay que ponerle stop al i2c
+loop:
+	rjmp loop
+
+;----------------------------SUBRUTINAS-------------------------------
+
+;________________________________________________--
+;				 Caudalimetro
+;__________________________________________________
+
 
 ;-----numero a string-----
 ImprimoTotal:
@@ -167,20 +156,6 @@ UnoTotal:
 FinImprimo:
 ret
 
-;----------------Operaciones matemáticas---------------
-
-;---Division--
-division:
-	clr cociente
-
-div1:
-	inc cociente
-	sub numeradorL, denominadorL
-	sbc numeradorH, denominadorH
-	brcc div1
-	dec cociente
-	
-	ret
 
 ;_____________________________________________________
 ;;;;;;;;;;;;;;;;;DISPLAY;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;|
@@ -594,10 +569,7 @@ T_COCKTail:
 	
 	.org 0x300
 T1_B_ISR:
+	cli
 	ldi CONTROL, 0x01
 	cbi portc,0
-	cbi portc,1
-	cbi portc,2
-	ldi TEMP,0b00000000	; STOP TIMER         0b00001001  ; CTC INTERNAL clock
-	sts TCCR1B,TEMP
 	reti
