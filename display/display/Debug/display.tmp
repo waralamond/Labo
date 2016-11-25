@@ -1,0 +1,61 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.6</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\avrasm\inc\m328pdef.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\Debug\display.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>display.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>display.map</FILE>
+  <FILE>display.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <start><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>23</LINE></start>
+  <InicI2C><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>62</LINE></InicI2C>
+  <InicDisplay><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>107</LINE></InicDisplay>
+  <DisplayCocktail><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>420</LINE></DisplayCocktail>
+  <DisplayEnter><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>287</LINE></DisplayEnter>
+  <DisplayWelcome><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>405</LINE></DisplayWelcome>
+  <I2CStop><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>310</LINE></I2CStop>
+  <loop><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>42</LINE></loop>
+  <wait1><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>70</LINE></wait1>
+  <error_A><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>80</LINE></error_A>
+  <continuo><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>83</LINE></continuo>
+  <ERROR1><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>396</LINE></ERROR1>
+  <wait2><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>89</LINE></wait2>
+  <error_B><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>99</LINE></error_B>
+  <continuo2><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>101</LINE></continuo2>
+  <retardo50ms><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>341</LINE></retardo50ms>
+  <WaitDataI2c><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>242</LINE></WaitDataI2c>
+  <DisplayEnable><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>368</LINE></DisplayEnable>
+  <retardo5ms><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>351</LINE></retardo5ms>
+  <retardo1ms><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>330</LINE></retardo1ms>
+  <wait_twint><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>244</LINE></wait_twint>
+  <error_data><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>315</LINE></error_data>
+  <DisplayChar><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>256</LINE></DisplayChar>
+  <retardo10us><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>321</LINE></retardo10us>
+  <loop_ret_10><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>324</LINE></loop_ret_10>
+  <loop_ret_1m><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>333</LINE></loop_ret_1m>
+  <loop_ret_50m><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>344</LINE></loop_ret_50m>
+  <loop_ret_5m><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>353</LINE></loop_ret_5m>
+  <retardo3s><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>359</LINE></retardo3s>
+  <loop_ret_3s><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>362</LINE></loop_ret_3s>
+  <ERROR><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>390</LINE></ERROR>
+  <T_Welcome><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>437</LINE></T_Welcome>
+  <DisplayWelcome_cont><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>411</LINE></DisplayWelcome_cont>
+  <T_Cocktail><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>440</LINE></T_Cocktail>
+  <DisplayCocktail_cont><FILE>C:\Users\waral\OneDrive\Documentos\GitHub\Labo\display\display\main.asm</FILE><LINE>426</LINE></DisplayCocktail_cont>
+ </LABELS>
+</ASSEMBLER_INFO>
